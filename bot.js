@@ -26,7 +26,9 @@ bot.addListener("error", function(message) {
 });
 
 // Listen for any message, say to him/her in the room
-bot.addListener("message", function(from, to, text, message) {
+bot.addListener("message", processMessage);
+
+function processMessage(from, to, text, message) {
 
   var command = getCommand(from, text);
 
@@ -36,9 +38,37 @@ bot.addListener("message", function(from, to, text, message) {
 
   var channel = config.channels[0];
   var glitchTime;
+  var validCommand = true;
+  var ignoredCommand = false;
 
   switch (command.name)
   {
+    case 'SAY':
+      if (command.from === config.botName) {
+          bot.say(channel, command.parameterText);
+      } else {
+          ignoredCommand = true;
+      }
+      break;
+
+    case 'EMOTE':
+      if (command.from === config.botName) {
+          bot.action(channel, command.parameterText);
+      } else {
+          ignoredCommand = true;
+      }
+      break;
+
+    case 'QUIT':
+      if (command.from === config.botName) {
+          bot.say(channel, 'Bye bye, cruel world! [QUIT command received]');
+          //bot.part(channel);
+          bot.disconnect('QUIT command received', shutdown);
+      } else {
+          ignoredCommand = true;
+      }
+      break;
+
     case 'DATE':
       glitchTime = new glitch.GlitchDate();
       bot.say(channel, 'The time is ' + glitchTime.toString());
@@ -93,12 +123,19 @@ bot.addListener("message", function(from, to, text, message) {
       break;
 
     default:
+      validCommand = false;
       console.log('Unknown command: ' + command.name);
   }
-});
 
-bot.addListener("join#moonies", function(nick, message) {
-  if ( nick === config.botName ) {
+  if (ignoredCommand === false || validCommand === true) {
+      console.log('Received command: ' + command.name +
+                  ' from: ' + command.from +
+                  ' parameterText: ' + command.parameterText);
+  }
+}
+
+bot.addListener("join#moonies", function (nick) {
+    if ( nick === config.botName ) {
     announcementsEnabled = true;
   }
   if ( nick === 'LazyCubimal' ) {
@@ -107,7 +144,7 @@ bot.addListener("join#moonies", function(nick, message) {
   }
 });
 
-bot.addListener("part#moonies", function(nick, message) {
+bot.addListener("part#moonies", function(nick) {
   if ( nick === config.botName ) {
     announcementsEnabled = false;
   }
@@ -131,21 +168,48 @@ function announceTime() {
 function getCommand(from, text) {
   var pat;
 
-  pat = /^(\(([^)]+)\) )?!([a-zA-Z]+)( .*)?$/;
+  pat = /^(\(([^)]+)\) )?!([a-zA-Z]+) *(.*)?$/;
   //pat = /^!([a-zA-Z]+)( .*)?$/;
 
-  if (pat.test(text)) {
-    var fromPerson = from;
-    if (fromPerson === 'HighlyToxicBot') {
-      fromPerson = text.replace(pat, '$2');
-    }
+    if (!pat.test(text)) {
+        //console.log('getCommand: pattern didn\'t match for ' + text);
+        return null;
+    } else {
+        var fromPerson = from;
+        if (fromPerson === 'HighlyToxicBot') {
+            fromPerson = text.replace(pat, '$2');
+        }
 
-    return { name : text.replace(pat, '$3').toUpperCase(),
-	     parameterText : text.replace(pat, '$4'),
-             "from" : fromPerson };
-  } else {
-    return null;
-  }
+        return { name : text.replace(pat, '$3').toUpperCase(),
+                 parameterText : text.replace(pat, '$4'),
+                 "from" : fromPerson };
+
+        /*
+        console.log('getCommand: ' +
+            ' name: ' + command.name +
+            ' parameterText: ' + command.parameterText +
+            ' from: ' + command.from );
+
+         return command;
+        */
+
+    }
 }
 
 setTimeout(announceTime, 2000);
+
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
+var util = require('util');
+
+process.stdin.on('data', function (text) {
+    console.log('received data:', util.inspect(text));
+
+    var commandText = text.trim();
+    processMessage(config.botName, null, commandText, null);
+});
+
+function shutdown() {
+    console.log('Shuting down');
+    process.exit();
+}
