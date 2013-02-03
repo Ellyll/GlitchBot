@@ -7,14 +7,12 @@ var config = {
 
 // Get the lib
 var irc = require("irc");
-var glitch = require('./lib/glitch');
+var glitch = require('./lib/Glitch/glitch'); // the IDE changed this for me when I moved the files :)
+var command = require('./lib/Bot/command');
 var lastGlitchDate = new glitch.GlitchDate();
 var announcementsEnabled = false;
 
-// Display exceltions but not quit
-//process.on('uncaughtException', function (error) {
-//	   console.log(error.stack);
-//});
+
 
 // Create the bot name
 var bot = new irc.Client(config.server, config.botName, {
@@ -28,110 +26,15 @@ bot.addListener("error", function(message) {
 // Listen for any message, say to him/her in the room
 bot.addListener("message", processMessage);
 
+
 function processMessage(from, to, text, message) {
 
-  var command = getCommand(from, text);
+  var botCommand = getCommand(from, text);
 
-  if ( command === null ) {
+  if ( botCommand === null ) {
     return;
   }
-
-  var channel = config.channels[0];
-  var glitchTime;
-  var validCommand = true;
-  var ignoredCommand = false;
-
-  switch (command.name)
-  {
-    case 'SAY':
-      if (command.from === config.botName) {
-          bot.say(channel, command.parameterText);
-      } else {
-          ignoredCommand = true;
-      }
-      break;
-
-    case 'EMOTE':
-      if (command.from === config.botName) {
-          bot.action(channel, command.parameterText);
-      } else {
-          ignoredCommand = true;
-      }
-      break;
-
-    case 'QUIT':
-      if (command.from === config.botName) {
-          bot.say(channel, 'Bye bye, cruel world! [QUIT command received]');
-          //bot.part(channel);
-          bot.disconnect('QUIT command received', shutdown);
-      } else {
-          ignoredCommand = true;
-      }
-      break;
-
-    case 'DATE':
-      glitchTime = new glitch.GlitchDate();
-      bot.say(channel, 'The time is ' + glitchTime.toString());
-      break;
-
-    case 'DAY':
-      glitchTime = new glitch.GlitchDate();
-      bot.say(channel, 'It\'s ' + glitchTime.dayOfWeek.name);
-      break;
-
-    case 'MOON':
-      bot.action(channel, 'moons everyone!');
-      break;
-
-    case 'DANCE':
-      bot.action(channel, 'dances!');
-      break;
-
-    case 'HUG':
-      bot.action(channel, 'hugs everyone!');
-      break;
-
-    case 'KISS':
-      bot.action(channel, 'kisses everyone!');
-      break;
-
-    case 'SPLANK':
-      bot.action(channel, 'splanks everyone!');
-      break;
-
-    case 'POKE':
-      bot.action(channel, 'pokes everyone!');
-      break;
-
-    case 'HI':
-      var sign = glitch.hiSigns.getRandomSign();
-      bot.action(channel, 'gives ' + command.from + ' a "HI!" with ' + sign.toLowerCase() + '.');
-      break;
-
-    case 'MOONDAY':
-      glitchTime = new glitch.GlitchDate();
-
-      if (glitchTime.dayOfWeek.name === 'Moonday')
-      {
-          bot.say(channel, 'It\'s Moonday today!');
-          bot.action(config.channels[0], 'moons everyone!');
-      }
-      var nextMoonday = glitchTime.timeUntilMoonday();
-        bot.say(channel, 'The next Moonday will be in:');
-        bot.say(channel, 'Glitch Time: ' + nextMoonday.glitch.toString());
-        bot.say(channel, 'Real Time: ' + nextMoonday.real.toString());
-      break;
-
-    default:
-      validCommand = false;
-      console.log('Unknown command: ' + command.name);
-  }
-
-  if (ignoredCommand === false || validCommand === true) {
-      console.log('Received command: ' + command.name +
-                  ' from: ' + command.from +
-                  ' parameterText: ' + command.parameterText);
-  }
+    command.processCommand(bot, botCommand, config, shutdown);
 }
 
 bot.addListener("join#moonies", function (nick) {
