@@ -5,40 +5,30 @@ var config = {
   botName: "GlitchBot"
 };
 
-// Get the lib
+// Get the libs
 var irc = require("irc");
 var glitch = require('./lib/Glitch/glitch'); // the IDE changed this for me when I moved the files :)
 var command = require('./lib/Bot/command');
 var lastGlitchDate = new glitch.GlitchDate();
 var announcementsEnabled = false;
 
-
-
 // Create the bot name
 var bot = new irc.Client(config.server, config.botName, {
   channels: config.channels
 });
 
+// Listen for errors
 bot.addListener("error", function(message) {
   console.log(message);
 });
 
-// Listen for any message, say to him/her in the room
+// Listen for any message
 bot.addListener("message", processMessage);
 
-
-function processMessage(from, to, text, message) {
-
-  var botCommand = getCommand(from, text);
-
-  if ( botCommand === null ) {
-    return;
-  }
-    command.processCommand(bot, botCommand, config, shutdown);
-}
-
+// Enable time announcements only when we're in the channel
+// also give op to LazyCubimal since bot often beats her on after server restart
 bot.addListener("join#moonies", function (nick) {
-    if ( nick === config.botName ) {
+  if ( nick === config.botName ) {
     announcementsEnabled = true;
   }
   if ( nick === 'LazyCubimal' ) {
@@ -46,12 +36,27 @@ bot.addListener("join#moonies", function (nick) {
     bot.send('MODE', '#moonies', '+o', 'LazyCubimal');
   }
 });
-
 bot.addListener("part#moonies", function(nick) {
   if ( nick === config.botName ) {
     announcementsEnabled = false;
   }
 });
+
+// Check for a new day and announce it if it is
+setTimeout(announceTime, 2000);
+
+// Enabled commands to be typed in on console
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', function (text) {
+    var commandText = text.trim();
+    processMessage(config.botName, null, commandText, null);
+});
+
+
+//-----------
+// Functions
+//-----------
 
 function announceTime() {
     var newGlitchDate = new glitch.GlitchDate();
@@ -68,49 +73,13 @@ function announceTime() {
     setTimeout(announceTime, 2000);
 }
 
-function getCommand(from, text) {
-  var pat;
-
-  pat = /^(\(([^)]+)\) )?!([a-zA-Z]+) *(.*)?$/;
-  //pat = /^!([a-zA-Z]+)( .*)?$/;
-
-    if (!pat.test(text)) {
-        //console.log('getCommand: pattern didn\'t match for ' + text);
-        return null;
-    } else {
-        var fromPerson = from;
-        if (fromPerson === 'HighlyToxicBot') {
-            fromPerson = text.replace(pat, '$2');
-        }
-
-        return { name : text.replace(pat, '$3').toUpperCase(),
-                 parameterText : text.replace(pat, '$4'),
-                 "from" : fromPerson };
-
-        /*
-        console.log('getCommand: ' +
-            ' name: ' + command.name +
-            ' parameterText: ' + command.parameterText +
-            ' from: ' + command.from );
-
-         return command;
-        */
-
+function processMessage(from, to, text, message) {
+    var botCommand = command.getCommand(from, text);
+    if ( botCommand === null ) {
+        return;
     }
+    command.processCommand(bot, botCommand, config, shutdown);
 }
-
-setTimeout(announceTime, 2000);
-
-process.stdin.resume();
-process.stdin.setEncoding('utf8');
-var util = require('util');
-
-process.stdin.on('data', function (text) {
-    console.log('received data:', util.inspect(text));
-
-    var commandText = text.trim();
-    processMessage(config.botName, null, commandText, null);
-});
 
 function shutdown() {
     console.log('Shuting down');
