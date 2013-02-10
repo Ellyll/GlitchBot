@@ -1,11 +1,5 @@
-// Create the configuration
-var config = {
-  channels: ["#moonies"],
-  server: "irc.lazycubimal.eu",
-  botName: "GlitchBot"
-};
-
 // Get the libs
+var config = require("./config");
 var irc = require("irc");
 var glitch = require('./lib/Glitch/glitch'); // the IDE changed this for me when I moved the files :)
 var command = require('./lib/Bot/command');
