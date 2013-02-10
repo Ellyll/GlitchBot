@@ -1,10 +1,9 @@
 // Get the libs
 var config = require("./config");
 var irc = require("irc");
-var glitch = require('./lib/Glitch/glitch'); // the IDE changed this for me when I moved the files :)
+var glitch = require('./lib/Glitch/glitch');
 var command = require('./lib/Bot/command');
-//var lastGlitchDate = new glitch.GlitchDate();
-//var announcementsEnabled = false;
+
 var glitchBot = { // namespace for app's globals
     bot : null,
     announcementsEnabled : false,
@@ -63,14 +62,9 @@ glitchBot.bot.addListener("error", function(message) {
 glitchBot.bot.addListener("message", processMessage);
 
 // Enable time announcements only when we're in the channel
-// also give op to LazyCubimal since bot often beats her on after server restart
 glitchBot.bot.addListener("join#moonies", function (nick) {
   if ( nick === config.botName ) {
     glitchBot.announcementsEnabled = true;
-  }
-  if ( nick === 'LazyCubimal' ) {
-    console.log('Giving op to LazyCubimal');
-    glitchBot.bot.send('MODE', '#moonies', '+o', 'LazyCubimal');
   }
 });
 glitchBot.bot.addListener("part#moonies", function(nick) {
