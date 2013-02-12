@@ -4,112 +4,130 @@ var irc = require("irc");
 var glitch = require('./lib/Glitch/glitch');
 var command = require('./lib/Bot/command');
 
-var glitchBot = { // namespace for app's globals
-    bot : null,
-    channels: config.channels.map(function(item) { return { name: item, announcementsEnabled : false } }),
-    lastGlitchDate : new glitch.GlitchDate(),
-    setChannelAnnouncementStatus : function(channelName, status) {
-        var i, length;
-        for (i=0, length=glitchBot.channels.length ; i<length ; i++) {
-          if (glitchBot.channels[i].name === channelName) {
-            glitchBot.channels[i].announcementsEnabled = status;
-          }
-        }
-    },
-    getChannelAnnouncementStatus : function(channelName, status) {
-        var i, length;
-        for (i=0, length=glitchBot.channels.length ; i<length ; i++) {
-            if (glitchBot.channels[i].name === channelName) {
-                return glitchBot.channels[i].announcementsEnabled;
-            }
-        }
-        return null;
-    }
-};
+function GlitchBot(config) {
+    this.channels = config.channels.map(function(item) { return { name: item, announcementsEnabled : false } });
+    this.lastGlitchDate = new glitch.GlitchDate();
+    this.botName = config.botName;
+    this.server = config.server;
+    var that = this;
 
-//-----------
-// Functions
-//-----------
-function shutdown() {
-    console.log('Shutting down');
-    process.exit();
-}
+    that.announceTime = function() {
+        var newGlitchDate = new glitch.GlitchDate();
+        var i;
+        var length;
+        var channel;
 
-function announceTime() {
-    var newGlitchDate = new glitch.GlitchDate();
-    var i;
-    var length;
-    var channel;
-
-    if (newGlitchDate.dayOfYear !== glitchBot.lastGlitchDate.dayOfYear) {
-        for (i=0, length=glitchBot.channels.length ; i<length ; i++) {
-            channel = glitchBot.channels[i];
-            if (channel.announcementsEnabled) {
-                glitchBot.bot.say(channel, 'Happy New ' + newGlitchDate.dayOfWeek.name + '!');
-                glitchBot.bot.say(channel, 'The time is ' + newGlitchDate.toString());
-                if (newGlitchDate.dayOfWeek.name === 'Moonday') {
-                    glitchBot.bot.action(channel, 'moons everyone!');
+        if (newGlitchDate.dayOfYear !== that.lastGlitchDate.dayOfYear) {
+            for (i=0, length=that.channels.length ; i<length ; i++) {
+                channel = that.channels[i];
+                if (channel.announcementsEnabled) {
+                    that.bot.say(channel, 'Happy New ' + newGlitchDate.dayOfWeek.name + '!');
+                    that.bot.say(channel, 'The time is ' + newGlitchDate.toString());
+                    if (newGlitchDate.dayOfWeek.name === 'Moonday') {
+                        that.bot.action(channel, 'moons everyone!');
+                    }
                 }
             }
         }
-    }
-    glitchBot.lastGlitchDate = newGlitchDate;
-    setTimeout(announceTime, 2000);
+        that.lastGlitchDate = newGlitchDate;
+        setTimeout(that.announceTime, 2000);
+    };
+
+    that.processMessage = function(from, to, text /*, message */) {
+        var botCommand = command.getCommand(from, text);
+        if ( botCommand === null ) {
+            return;
+        }
+
+        //TODO: change config to glitchBot.channels ?
+        command.processCommand(that.bot, botCommand, config, that.shutdown);
+    };
+
+    that.addListeners = function() {
+        var that = this;
+
+        // Listen for errors
+        that.bot.addListener("error", function(message) {
+            console.log(message);
+        });
+
+        // Listen for any message
+        that.bot.addListener("message", that.processMessage);
+
+        // Enable time announcements only when we're in the channel
+        that.bot.addListener("join", function (channelName, nick) {
+            if ( nick === that.botName ) {
+                that.setChannelAnnouncementStatus(channelName, true);
+            }
+        });
+        that.bot.addListener("part", function(channelName, nick) {
+            if ( nick === that.botName ) {
+                that.setChannelAnnouncementStatus(channelName, false);
+            }
+        });
+
+        // Check for a new day and announce it if it is
+        setTimeout(that.announceTime, 2000);
+    };
+
+    // Create the bot
+    this.bot = new irc.Client(this.server, this.botName, {
+        channels: config.channels
+    });
+
+    this.addListeners();
+
+    // Enabled commands to be typed in on console
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', function (text) {
+        var commandText = text.trim();
+        that.processMessage(that.botName, null, commandText, null);
+    });
 }
 
-function processMessage(from, to, text, message) {
-    var botCommand = command.getCommand(from, text);
-    if ( botCommand === null ) {
-        return;
+GlitchBot.prototype.setChannelAnnouncementStatus = function(channelName, status) {
+    var that = this;
+    var i, length;
+    for (i=0, length=this.channels.length ; i<length ; i++) {
+        if (that.channels[i].name === channelName) {
+            that.channels[i].announcementsEnabled = status;
+        }
     }
+};
 
-    //TODO: change config to glitchBot.channels ?
-    command.processCommand(glitchBot.bot, botCommand, config, shutdown);
-}
+/*
+GlitchBot.prototype.getChannelAnnouncementStatus = function(channelName) {
+    var i, length;
+    for (i=0, length=glitchBot.channels.length ; i<length ; i++) {
+        if (glitchBot.channels[i].name === channelName) {
+            return glitchBot.channels[i].announcementsEnabled;
+        }
+    }
+    return null;
+};
+*/
+
+GlitchBot.prototype.shutdown = function() {
+    console.log('Shutting down');
+    process.exit();
+};
+
 
 
 
 //------
 // Main
 //------
+var glitchBot = new GlitchBot(config);
 
 
-// Create the bot
-glitchBot.bot = new irc.Client(config.server, config.botName, {
-  channels: config.channels
-});
 
-// Listen for errors
-glitchBot.bot.addListener("error", function(message) {
-  console.log(message);
-});
 
-// Listen for any message
-glitchBot.bot.addListener("message", processMessage);
 
-// Enable time announcements only when we're in the channel
-glitchBot.bot.addListener("join", function (channelName, nick) {
-  var i, length;
-  if ( nick === config.botName ) {
-    glitchBot.setChannelAnnouncementStatus(channelName, true);
-  }
-});
-glitchBot.bot.addListener("part", function(channelName, nick) {
-  if ( nick === config.botName ) {
-    glitchBot.setChannelAnnouncementStatus(channelName, false);
-  }
-});
 
-// Check for a new day and announce it if it is
-setTimeout(announceTime, 2000);
 
-// Enabled commands to be typed in on console
-process.stdin.resume();
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', function (text) {
-    var commandText = text.trim();
-    processMessage(config.botName, null, commandText, null);
-});
+
 
 
 
