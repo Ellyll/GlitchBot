@@ -18,13 +18,17 @@ function GlitchBot(config) {
         var channel;
 
         if (newGlitchDate.dayOfYear !== that.lastGlitchDate.dayOfYear) {
-            for (i=0, length=that.channels.length ; i<length ; i++) {
+            console.log('Announcing new day at ' + (new Date()).toString());
+            length=that.channels.length;
+            for (i=0 ; i<length ; i++) {
                 channel = that.channels[i];
                 if (channel.announcementsEnabled) {
-                    that.bot.say(channel, 'Happy New ' + newGlitchDate.dayOfWeek.name + '!');
-                    that.bot.say(channel, 'The time is ' + newGlitchDate.toString());
+                    console.log(' announcing for channel: ' + channel.name);
+                    that.bot.say(channel.name, 'Happy New ' + newGlitchDate.dayOfWeek.name + '!');
+                    that.bot.say(channel.name, 'The time is ' + newGlitchDate.toString());
                     if (newGlitchDate.dayOfWeek.name === 'Moonday') {
-                        that.bot.action(channel, 'moons everyone!');
+                        console.log(' announcing Moonday!');
+                        that.bot.action(channel.name, 'moons everyone!');
                     }
                 }
             }
