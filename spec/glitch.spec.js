@@ -12,6 +12,32 @@ describe('Glitch', function() {
         });
     });
 
+    describe('D12', function() {
+        var d12 = new glitch.D12();
+        var sides = d12.getSides();
+
+        it('Should create a die', function() {
+            expect(d12).not.toBeUndefined();
+        });
+
+        it('Should have 12 sides', function() {
+            expect(sides.length).toBe(12);
+        });
+
+        it('Should have the names of the giants and Rook as the sides', function() {
+            expect(sides).toContain('Rook');
+            expect(sides).toContain('Spriggan');
+            expect(sides).toContain('Mab');
+        });
+
+        it('Should give a side when rolled', function() {
+            var result = d12.roll();
+
+            expect(result).toBeDefined();
+            expect(sides).toContain(result);
+        });
+    });
+
     describe('months', function() {
         it('Should contain a list of all the Glitch months', function() {
             expect(glitch.months).not.toBeUndefined();

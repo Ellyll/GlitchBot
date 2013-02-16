@@ -145,6 +145,17 @@ describe('command', function() {
             expect(bot.sayCalled).toBe(true);
         });
 
+        it('Should call say() for the ROLL command', function() {
+            runs(function() {
+                botCommand.name = 'ROLL';
+                command.processCommand(bot, botCommand, config, shutdown);
+            }, 500);
+
+            // roll waits for 2.7 secs
+            waitsFor(function() { return bot.sayCalled; }, 10000);
+            runs(function() { expect(bot.sayCalled).toBe(true); });
+        });
+
         // action() based commands: 'MOON', 'DANCE', 'HUG', 'KISS', 'SPLANK', 'POKE', 'HI'
         it('Should call action() for the MOON command', function() {
             botCommand.name = 'MOON';
