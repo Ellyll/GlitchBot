@@ -122,4 +122,16 @@ describe('Glitch', function() {
         });
     });
 
+    describe('cubimals', function() {
+        it('Should contain a list of all series 1 cubimals', function() {
+            expect(glitch.cubimals.series1).not.toBeUndefined();
+            expect(glitch.cubimals.series1.length).toBe(23);
+        });
+        it('Should contain a list of all series 2 cubimals', function() {
+            expect(glitch.cubimals.series2).not.toBeUndefined();
+            expect(glitch.cubimals.series2.length).toBe(20);
+        });
+
+    });
+
 });
