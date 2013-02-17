@@ -36,16 +36,17 @@ describe('command', function() {
             this.actionCalled = false;
             this.disconnectCalled = false;
 
-            this.say = function() { this.sayCalled = true; }
-            this.action = function() { this.actionCalled = true; }
+            this.say = function() { this.sayCalled = true; };
+            this.action = function() { this.actionCalled = true; };
             this.disconnect = function(message, shutdown) { this.disconnectCalled = true; shutdown(); }
-        }
+        };
 
         var bot;
         var botCommand;
         var config;
         var shutdown;
         var shutdownCalled;
+        var channel;
 
         beforeEach(function(){
             bot = new MockBot();
@@ -53,12 +54,13 @@ describe('command', function() {
             config = { channels: [ 'somechannel' ], botName: "someoneelse" };
             shutdownCalled = false;
             shutdown = function () { shutdownCalled = true; };
+            channel = 'somechannel';
         });
 
         it('Should do nothing for an invalid command', function() {
             botCommand.name = 'SOMEINVALIDCOMMAND';
 
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.sayCalled).toBe(false);
             expect(bot.actionCalled).toBe(false);
             expect(bot.disconnectCalled).toBe(false);
@@ -69,7 +71,7 @@ describe('command', function() {
             botCommand.from = 'someone';
             config.botName = 'someone';
 
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.disconnectCalled).toBe(true);
             expect(shutdownCalled).toBe(true);
         });
@@ -79,7 +81,7 @@ describe('command', function() {
             botCommand.from = 'someone';
             config.botName = 'someoneelse';
 
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.disconnectCalled).toBe(false);
             expect(shutdownCalled).toBe(false);
         });
@@ -89,7 +91,7 @@ describe('command', function() {
             botCommand.from = 'someone';
             config.botName = 'someone';
 
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.sayCalled).toBe(true);
             expect(bot.disconnectCalled).toBe(false);
             expect(shutdownCalled).toBe(false);
@@ -100,7 +102,7 @@ describe('command', function() {
             botCommand.from = 'someone';
             config.botName = 'someoneelse';
 
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.sayCalled).toBe(false);
             expect(bot.disconnectCalled).toBe(false);
             expect(shutdownCalled).toBe(false);
@@ -111,7 +113,7 @@ describe('command', function() {
             botCommand.from = 'someone';
             config.botName = 'someone';
 
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(true);
             expect(bot.disconnectCalled).toBe(false);
             expect(shutdownCalled).toBe(false);
@@ -122,7 +124,7 @@ describe('command', function() {
             botCommand.from = 'someone';
             config.botName = 'someoneelse';
 
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(false);
             expect(bot.disconnectCalled).toBe(false);
             expect(shutdownCalled).toBe(false);
@@ -131,24 +133,24 @@ describe('command', function() {
         // say() based commands: 'DATE', 'DAY', 'MOONDAY'
         it('Should call say() for the DATE command', function() {
             botCommand.name = 'DATE';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.sayCalled).toBe(true);
         });
         it('Should call say() for the DAY command', function() {
             botCommand.name = 'DAY';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.sayCalled).toBe(true);
         });
         it('Should call say() for the MOONDAY command', function() {
             botCommand.name = 'MOONDAY';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.sayCalled).toBe(true);
         });
 
         it('Should call say() for the ROLL command', function() {
             runs(function() {
                 botCommand.name = 'ROLL';
-                command.processCommand(bot, botCommand, config, shutdown);
+                command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             }, 500);
 
             // roll waits for 2.7 secs
@@ -159,37 +161,37 @@ describe('command', function() {
         // action() based commands: 'MOON', 'DANCE', 'HUG', 'KISS', 'SPLANK', 'POKE', 'HI'
         it('Should call action() for the MOON command', function() {
             botCommand.name = 'MOON';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(true);
         });
         it('Should call action() for the DANCE command', function() {
             botCommand.name = 'DANCE';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(true);
         });
         it('Should call action() for the HUG command', function() {
             botCommand.name = 'HUG';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(true);
         });
         it('Should call action() for the KISS command', function() {
             botCommand.name = 'KISS';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(true);
         });
         it('Should call action() for the SPLANK command', function() {
             botCommand.name = 'SPLANK';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(true);
         });
         it('Should call action() for the POKE command', function() {
             botCommand.name = 'POKE';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(true);
         });
         it('Should call action() for the HI command', function() {
             botCommand.name = 'HI';
-            command.processCommand(bot, botCommand, config, shutdown);
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.actionCalled).toBe(true);
         });
 

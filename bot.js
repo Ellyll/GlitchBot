@@ -44,7 +44,8 @@ function GlitchBot(config) {
         }
 
         //TODO: change config to glitchBot.channels ?
-        command.processCommand(that.bot, botCommand, config, that.shutdown);
+        //var channelNames = that.channels.map(function(channel){ return channel.name; });
+        command.processCommand(that.bot, botCommand, to, config.botName, that.shutdown);
     };
 
     that.addListeners = function() {
