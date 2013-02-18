@@ -132,6 +132,41 @@ describe('Glitch', function() {
             expect(glitch.cubimals.series2.length).toBe(20);
         });
 
+        describe('getRandomCubimal', function() {
+            it('Should return a cubimal', function() {
+                var cubimal = glitch.cubimals.getRandomCubimal();
+                var cubimals = glitch.cubimals.series1.concat(glitch.cubimals.series2);
+                expect(cubimals).toContain(cubimal);
+            });
+            it('Should return a cubimal from a random series', function() {
+                var series1Counts = 0;
+                var series2Counts = 0;
+                var cubimal;
+                var tries;
+                for(tries=0 ; tries < 1000 ; tries++) {
+                    cubimal = glitch.cubimals.getRandomCubimal();
+                    if (glitch.cubimals.series1.indexOf(cubimal) > -1) { series1Counts++; }
+                    if (glitch.cubimals.series2.indexOf(cubimal) > -1) { series2Counts++; }
+                }
+                expect(series1Counts).toBeGreaterThan(0);
+                expect(series2Counts).toBeGreaterThan(0);
+                expect(Math.abs(series1Counts-series2Counts)).toBeLessThan(200); // expect the numbers to be similar
+            });
+            it('Should return a random cubimal', function() {
+                var chosen = [];
+                var cubimal;
+                var tries;
+                for(tries=0 ; tries < 1000 ; tries++) {
+                    cubimal = glitch.cubimals.getRandomCubimal();
+                    if (chosen.indexOf(cubimal) === -1) {
+                        chosen.push(cubimal);
+                    }
+                }
+                expect(chosen.length).toBeGreaterThan(2); // several types chosen
+            });
+        });
+
+
     });
 
 });
