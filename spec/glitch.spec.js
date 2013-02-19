@@ -166,7 +166,32 @@ describe('Glitch', function() {
             });
         });
 
+        describe('getDistanceRaced', function() {
+            it('Should return a number', function() {
+                var distance = glitch.cubimals.getDistanceRaced();
+                expect(typeof distance).toBe('number');
+            });
+            it('Should return a random distance', function() {
+                var distance;
+                var distances = [];
+                var tries;
+                for(tries=0 ; tries < 1000 ; tries++) {
+                    distance = glitch.cubimals.getDistanceRaced();
+                    if (distances.indexOf(distance) === -1) {
+                        distances.push(distance);
+                    }
+                }
+                expect(distances.length).toBeGreaterThan(2); // several different distances
+            });
+        });
+        describe('race', function() {
+            it('Should return a cubimal name and distance', function() {
+                var raced = glitch.cubimals.race();
 
+                expect(raced).toBeDefined();
+                expect(typeof raced.cubimal).toBe('string');
+                expect(typeof raced.distance).toBe('number');
+            });
+        });
     });
-
 });
