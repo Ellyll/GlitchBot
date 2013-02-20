@@ -161,6 +161,11 @@ describe('command', function() {
             command.processCommand(bot, botCommand, channel, config.botName, shutdown);
             expect(bot.sayCalled).toBe(true);
         });
+        it('Should call say() for the CUBIMAL command', function() {
+            botCommand.name = 'RACE';
+            command.processCommand(bot, botCommand, channel, config.botName, shutdown);
+            expect(bot.sayCalled).toBe(true);
+        });
 
         // action() based commands: 'MOON', 'DANCE', 'HUG', 'KISS', 'SPLANK', 'POKE', 'HI'
         it('Should call action() for the MOON command', function() {
